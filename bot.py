@@ -31,10 +31,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(text, download=True)
             filename = ydl.prepare_filename(info)
+            caption = info.get("description", "")
+
+        # Giới hạn caption Telegram (1024 ký tự)
+        if len(caption) > 1000:
+            caption = caption[:1000] + "..."
 
         await update.message.reply_video(
             video=open(filename, "rb"),
-            caption="Here you go 👌 (no watermark)",
+            caption=caption,
         )
 
         os.remove(filename)
