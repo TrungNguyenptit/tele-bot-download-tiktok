@@ -23,8 +23,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     ydl_opts = {
         "outtmpl": f"{DOWNLOAD_DIR}/%(id)s.%(ext)s",
-        "format": "bv*+ba/best",
-        "merge_output_format": "mp4",
+        "format": "mp4",
         "quiet": True,
     }
 
