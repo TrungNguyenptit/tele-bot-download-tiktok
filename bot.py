@@ -1,9 +1,14 @@
-from telegram import Update
-from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filters
-import yt_dlp
 import os
+import yt_dlp
+from telegram import Update
+from telegram.ext import (
+    ApplicationBuilder,
+    ContextTypes,
+    MessageHandler,
+    filters,
+)
 
-BOT_TOKEN = "YOUR_BOT_TOKEN"
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 DOWNLOAD_DIR = "downloads"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
@@ -20,7 +25,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ydl_opts = {
         "outtmpl": f"{DOWNLOAD_DIR}/%(id)s.%(ext)s",
         "format": "mp4",
-        "quiet": True
+        "quiet": True,
     }
 
     try:
@@ -30,15 +35,18 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await update.message.reply_video(
             video=open(filename, "rb"),
-            caption="Here you go 👌 (no watermark)"
+            caption="Here you go 👌 (no watermark)",
         )
 
         os.remove(filename)
 
     except Exception as e:
-        await update.message.reply_text(f"Error: {str(e)}")
+        await update.message.reply_text(f"Error: {e}")
 
-app = ApplicationBuilder().token(BOT_TOKEN).build()
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+def main():
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    app.run_polling()
 
-app.run_polling()
+if __name__ == "__main__":
+    main()
