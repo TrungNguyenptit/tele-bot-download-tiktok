@@ -1,6 +1,8 @@
 import os
 import yt_dlp
 from playwright.sync_api import sync_playwright
+import random
+import time
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filters
 
