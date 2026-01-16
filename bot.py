@@ -8,22 +8,25 @@ from telegram.ext import (
     filters,
 )
 
-
 DOWNLOAD_DIR = "downloads"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
+def is_supported_link(text: str) -> bool:
+    return any(x in text for x in ["tiktok.com", "douyin.com"])
 
-    if "tiktok.com" not in text:
-        await update.message.reply_text("Send me a TikTok link.")
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text.strip()
+
+    if not is_supported_link(text):
+        await update.message.reply_text("Send me a TikTok or Douyin link.")
         return
 
-    await update.message.reply_text("Downloading…")
+    await update.message.reply_text("Downloading video…")
 
     ydl_opts = {
         "outtmpl": f"{DOWNLOAD_DIR}/%(id)s.%(ext)s",
         "format": "mp4",
+        "merge_output_format": "mp4",
         "quiet": True,
     }
 
@@ -31,15 +34,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(text, download=True)
             filename = ydl.prepare_filename(info)
-            caption = info.get("description", "")
-
-        # Giới hạn caption Telegram (1024 ký tự)
-        if len(caption) > 1000:
-            caption = caption[:1000] + "..."
 
         await update.message.reply_video(
             video=open(filename, "rb"),
-            caption=caption,
+            caption="✅ Video downloaded",
         )
 
         os.remove(filename)
@@ -49,7 +47,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def main():
     BOT_TOKEN = os.getenv("BOT_TOKEN")
-    print("BOT_TOKEN =", repr(BOT_TOKEN))
+    if not BOT_TOKEN:
+        raise RuntimeError("BOT_TOKEN not set")
+
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.run_polling()
